@@ -27,6 +27,7 @@ type PrepareCmd struct {
 	DefaultEphemeralStorageRequest string        `name:"default-ephemeral-storage-request"`
 	DefaultEphemeralStorageLimit   string        `name:"default-ephemeral-storage-limit"`
 	DefaultTimezone                string        `name:"default-timezone" default:"Etc/UTC" env:"CUSTOM_ENV_VM_TIMEZONE"`
+	DefaultCloudInitBase64         string        `name:"default-cloudinit-base64"`
 	Timeout                        time.Duration `name:"timeout" default:"1h"`
 	DialTimeout                    time.Duration `default:"10s"`
 
@@ -63,6 +64,9 @@ func (cmd *PrepareCmd) Run(ctx context.Context, client kubevirt.KubevirtClient, 
 	}
 	if jctx.Timezone == "" {
 		jctx.Timezone = cmd.DefaultTimezone
+	}
+	if jctx.CloudInitBase64 == "" {
+		jctx.CloudInitBase64 = cmd.DefaultCloudInitBase64
 	}
 
 	rc := cmd.RunConfig
@@ -106,7 +110,6 @@ func (cmd *PrepareCmd) Run(ctx context.Context, client kubevirt.KubevirtClient, 
 	fmt.Fprintln(os.Stderr, "Image:", jctx.Image)
 	fmt.Fprintln(os.Stderr, "Node:", vm.Status.NodeName)
 	fmt.Fprintln(os.Stderr, "IP:", vm.Status.Interfaces[0].IP)
-
 	fmt.Fprintln(os.Stderr, "Waiting for virtual machine to become reachable via ssh...")
 
 	ssh, err := DialSSH(timeout, vm.Status.Interfaces[0].IP, rc.SSH, cmd.DialTimeout)

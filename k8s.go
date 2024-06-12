@@ -136,7 +136,11 @@ func CreateJobVM(
 				Devices: kubevirtapi.Devices{
 					Disks: []kubevirtapi.Disk{
 						{
-							Name: "root",
+							Name:  "containervolume",
+							Cache: "writethrough",
+							DiskDevice: kubevirtapi.DiskDevice{
+								Disk: &kubevirtapi.DiskTarget{Bus: "virtio"},
+							},
 						},
 					},
 				},
@@ -154,7 +158,7 @@ func CreateJobVM(
 			},
 			Volumes: []kubevirtapi.Volume{
 				{
-					Name: "root",
+					Name: "containervolume",
 					VolumeSource: kubevirtapi.VolumeSource{
 						ContainerDisk: &kubevirtapi.ContainerDiskSource{
 							Image:           jctx.Image,
@@ -166,7 +170,22 @@ func CreateJobVM(
 			},
 		},
 	}
-
+	if jctx.CloudInitBase64 != "" {
+		instanceTemplate.Spec.Domain.Devices.Disks = append(instanceTemplate.Spec.Domain.Devices.Disks, kubevirtapi.Disk{
+			Name: "cloudinitvolume",
+			DiskDevice: kubevirtapi.DiskDevice{
+				Disk: &kubevirtapi.DiskTarget{Bus: "virtio"},
+			},
+		})
+		instanceTemplate.Spec.Volumes = append(instanceTemplate.Spec.Volumes, kubevirtapi.Volume{
+			Name: "cloudinitvolume",
+			VolumeSource: kubevirtapi.VolumeSource{
+				CloudInitNoCloud: &kubevirtapi.CloudInitNoCloudSource{
+					UserDataBase64: jctx.CloudInitBase64,
+				},
+			},
+		})
+	}
 	return client.VirtualMachineInstance(jctx.Namespace).Create(ctx, &instanceTemplate)
 }
 

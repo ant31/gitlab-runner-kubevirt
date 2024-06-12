@@ -34,6 +34,7 @@ type JobContext struct {
 	EphemeralStorageRequest string
 	EphemeralStorageLimit   string
 	Timezone                string
+	CloudInitBase64         string
 
 	ProjectID    string
 	JobID        string
